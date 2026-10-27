@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WakatShop - Boutique & Épargne</title>
+<style>
+:root{--primary:#8B4513;--primary-dark:#5c2d0c;--bg:#f9f9f9;--text:#333;--white:#fff;--gray:#e0e0e0}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+body{background:var(--bg);color:var(--text);padding-bottom:70px}
+header{background:var(--primary);color:var(--white);padding:18px 15px;text-align:center;position:sticky;top:0;z-index:1000;box-shadow:0 2px 5px rgba(0,0,0,.2)}
+header h1{font-size:1.6rem;letter-spacing:1px;margin-bottom:4px}
+header p{font-size:.9rem;opacity:.9;font-weight:300}
+.container{max-width:1200px;margin:0 auto;padding:15px}
+.categories{display:flex;gap:10px;overflow-x:auto;padding:10px 0;margin-bottom:15px}
+.cat-btn{background:var(--white);border:1px solid var(--gray);padding:8px 15px;border-radius:20px;white-space:nowrap;cursor:pointer;font-weight:600;color:var(--text)}
+.cat-btn.active{background:var(--primary);color:var(--white);border-color:var(--primary)}
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:15px}
+.product-card{background:var(--white);border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05);display:flex;flex-direction:column}
+.product-img{width:100%;height:220px;object-fit:cover;background:#eee;cursor:pointer}
+.product-info{padding:15px;display:flex;flex-direction:column;flex-grow:1}
+.product-title{font-size:1.2rem;font-weight:bold;margin-bottom:5px;color:var(--primary-dark)}
+.product-price{color:var(--primary);font-weight:bold;font-size:1.2rem;margin-bottom:10px}
+.product-desc{font-size:.9rem;color:#555;margin-bottom:15px;line-height:1.4;flex-grow:1;white-space:pre-line}
+.btn{background:var(--primary);color:var(--white);border:none;padding:10px;border-radius:5px;font-weight:bold;cursor:pointer;width:100%;text-align:center}
+.btn:hover{background:var(--primary-dark)}
+.btn-outline{background:transparent;border:1px solid var(--primary);color:var(--primary);margin-top:5px}
+.btn-outline:hover{background:#f3e8e0}
+.btn-danger{background:#d9534f;color:var(--white);margin-top:5px}
+.section-box{background:var(--white);padding:20px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.05);margin-bottom:20px}
+.section-box h2,.section-box h3{margin-bottom:15px;color:var(--primary);border-bottom:2px solid var(--gray);padding-bottom:8px}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;margin-bottom:5px;font-weight:600;font-size:.9rem}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:10px;border:1px solid var(--gray);border-radius:5px;font-size:1rem}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}
+.stat-card{background:#fdf8f5;border-left:4px solid var(--primary);padding:15px;border-radius:5px}
+.stat-card h4{font-size:.9rem;color:#666;margin-bottom:5px}
+.stat-value{font-size:1.5rem;font-weight:bold;color:var(--primary)}
+#image-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;justify-content:center;align-items:center;padding:15px}
+.modal-content-box{background:var(--white);width:100%;max-width:600px;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;max-height:90vh}
+.modal-header{background:var(--primary);color:var(--white);padding:12px 15px;display:flex;justify-content:space-between;align-items:center}
+.modal-header h3{font-size:1.1rem}
+.modal-close{background:none;border:none;color:#fff;font-size:1.8rem;cursor:pointer;line-height:1}
+.modal-body{padding:15px;overflow-y:auto;text-align:center}
+.modal-body img{width:100%;max-height:50vh;object-fit:contain;border-radius:5px;background:#000;margin-bottom:10px}
+.modal-body p{text-align:left;color:#555;font-size:.95rem;margin-top:10px;line-height:1.4;white-space:pre-line}
+.modal-price{text-align:left;font-size:1.2rem;font-weight:bold;color:var(--primary);margin-top:5px}
+nav.bottom-nav{position:fixed;bottom:0;left:0;width:100%;background:var(--white);display:flex;justify-content:space-around;border-top:1px solid var(--gray);padding:10px 0;z-index:1000}
+.nav-item{text-align:center;font-size:.8rem;color:#666;cursor:pointer;background:none;border:none;flex:1}
+.nav-item.active{color:var(--primary);font-weight:bold}
+.nav-item i{display:block;font-size:1.2rem;margin-bottom:2px;font-style:normal}
+.view{display:none}.view.active{display:block}
+.dep{background:#f1f1f1;padding:12px;border-radius:5px;margin-bottom:10px}
+.dep input{width:140px;padding:6px;border:1px solid var(--gray);border-radius:5px;margin:6px 6px 0 0}
+.dep .btn{width:auto;padding:6px 10px;font-size:.85rem;margin-top:6px}
+.msg{text-align:center;color:#777;grid-column:1/-1}
+</style>
+</head>
+<body>
+<header>
+  <h1>WAKATSHOP</h1>
+  <p>Lits personnalisés & Mobilier de qualité - Achetez ou épargnez à votre rythme</p>
+</header>
+
+<div class="container">
+  <div id="shop-view" class="view active">
+    <div class="categories">
+      <button class="cat-btn active" onclick="filterCategory('all',this)">Tous</button>
+      <button class="cat-btn" onclick="filterCategory('Lit',this)">Lits</button>
+      <button class="cat-btn" onclick="filterCategory('Meuble',this)">Meubles</button>
+    </div>
+    <div class="products-grid" id="products-grid"><p class="msg">Chargement des articles...</p></div>
+    <div class="section-box" style="margin-top:30px;background:#fdf8f5;border-left:4px solid var(--primary)">
+      <h3>À propos de WakatShop</h3>
+      <p style="font-size:.95rem;color:#555;line-height:1.5">Bienvenue chez <strong>WakatShop</strong>. Nous sommes spécialisés dans la vente de meubles faits main et de lits personnalisés en bois rouge robustes, capitonnés en faux cuir, avec coffres de rangement et tiroirs intégrés. Profitez de notre système d'achat flexible et d'épargne par versements adaptés à votre rythme !</p>
+    </div>
+  </div>
+
+  <div id="savings-view" class="view">
+    <div class="section-box">
+      <h2>Mon Compte & Suivi d'Épargne</h2>
+      <p style="margin-bottom:15px;color:#666;font-size:.9rem">Entrez votre numéro Mobile Money pour voir vos articles épargnés et l'état de vos versements.</p>
+      <div class="form-group">
+        <label>Votre numéro de téléphone</label>
+        <input type="tel" id="client-phone" placeholder="Ex: 67443949">
+      </div>
+      <button class="btn" onclick="checkSavings()">Accéder à mon compte</button>
+    </div>
+    <div id="client-savings-result"></div>
+  </div>
+
+  <div id="admin-view" class="view">
+    <div class="section-box">
+      <h2>Tableau de bord administrateur</h2>
+      <div class="stats-grid">
+        <div class="stat-card"><h4>Clients inscrits</h4><div class="stat-value" id="stat-clients">0</div></div>
+        <div class="stat-card"><h4>Produits actifs</h4><div class="stat-value" id="stat-products">0</div></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:15px">
+        <button class="btn" onclick="switchAdminTab('products')">Gérer les produits</button>
+        <button class="btn btn-outline" style="margin-top:0" onclick="switchAdminTab('deposits')">Valider les versements</button>
+      </div>
+      <button class="btn btn-outline" onclick="adminLogout()">Se déconnecter de l'admin</button>
+    </div>
+
+    <div id="admin-products-sec">
+      <div class="section-box">
+        <h3 id="form-title">Ajouter un nouveau produit</h3>
+        <input type="hidden" id="prod-id">
+        <div class="form-group"><label>Titre de l'article</label><input type="text" id="prod-title" placeholder="Ex: Lit double en bois rouge avec coffre"></div>
+        <div class="form-group"><label>Catégorie</label><select id="prod-cat"><option value="Lit">Lit</option><option value="Meuble">Meuble</option></select></div>
+        <div class="form-group"><label>Prix (FCFA)</label><input type="number" id="prod-price" placeholder="Ex: 150000"></div>
+        <div class="form-group"><label>Lien de l'image (ImgBB)</label><input type="text" id="prod-img" placeholder="Collez le lien direct de l'image"></div>
+        <div class="form-group"><label>Description détaillée</label><textarea id="prod-desc" rows="4" placeholder="Matériaux, dimensions, rangements intégrés..."></textarea></div>
+        <button class="btn" onclick="saveProduct()">Enregistrer le produit</button>
+      </div>
+      <div class="section-box">
+        <h3>Catalogue actuel</h3>
+        <div class="products-grid" id="admin-products-grid" style="margin-top:15px"></div>
+      </div>
+    </div>
+
+    <div id="admin-deposits-sec" style="display:none">
+      <div class="section-box">
+        <h3>Versements & inscriptions clients</h3>
+        <div id="admin-deposits-list" style="margin-top:15px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="image-modal">
+  <div class="modal-content-box">
+    <div class="modal-header">
+      <h3 id="modal-title">Détails de l'article</h3>
+      <button class="modal-close" onclick="closeImageModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <img id="modal-img-content" src="" alt="Photo de l'article">
+      <div class="modal-price" id="modal-price-content"></div>
+      <p id="modal-desc-content"></p>
+      <button class="btn" id="modal-order-btn" style="margin-top:15px">Commander / Épargner</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="switchView('shop-view',this)"><i>🏠</i>Boutique</button>
+  <button class="nav-item" onclick="switchView('savings-view',this)"><i>💰</i>Mon compte</button>
+  <button class="nav-item" onclick="switchView('admin-view',this)"><i>⚙️</i>Admin</button>
+</nav>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZKtPcOpGSpIvJqrHNXg3qxYY0faFSp2TNC3uOlGdk2VDCCH8Ko8BJSBbNsFK93iv_/exec";
+const PLACEHOLDER = 'https://i.ibb.co/5G783YQ/placeholder.png';
+
+let products = [];
+let deposits = [];
+let adminPwd = '';
+let currentFilter = 'all';
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const digits = s => String(s || '').replace(/\D/g, '');
+const money = n => Number(n || 0).toLocaleString('fr-FR');
+
+function api(params) {
+  return fetch(SCRIPT_URL + '?' + new URLSearchParams(params)).then(r => r.json());
+}
+function post(body) {
+  if (adminPwd) body.pwd = adminPwd;
+  return fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) })
+    .then(r => r.json())
+    .then(r => {
+      if (r.error) {
+        if (r.error === 'unauthorized') adminPwd = '';
+        throw new Error(r.error);
+      }
+      return r;
+    });
+}
+
+window.onload = loadProducts;
+
+function loadProducts() {
+  return api({ action: 'getProducts' })
+    .then(data => {
+      if (Array.isArray(data)) products = data;
+      else throw new Error('format');
+    })
+    .catch(() => {
+      document.getElementById('products-grid').innerHTML = '<p class="msg">Impossible de charger les articles. Vérifiez votre connexion.</p>';
+      products = [];
+      throw 0;
+    })
+    .then(refreshProducts, () => {});
+}
+function refreshProducts() {
+  renderProducts();
+  renderAdminProducts();
+  updateStats();
+}
+
+function loadDeposits() {
+  return api({ action: 'getDeposits', pwd: adminPwd }).then(data => {
+    if (!Array.isArray(data)) throw new Error(data && data.error || 'format');
+    deposits = data;
+    renderAdminDeposits();
+    updateStats();
+  });
+}
+
+function updateStats() {
+  const clients = new Set(deposits.map(d => digits(d.phone)).filter(Boolean));
+  document.getElementById('stat-clients').innerText = adminPwd ? clients.size : '—';
+  document.getElementById('stat-products').innerText = products.length;
+}
+
+function switchView(viewId, btn) {
+  if (viewId === 'admin-view' && !adminPwd) {
+    const pwd = prompt("Mot de passe administrateur :");
+    if (!pwd) return;
+    adminPwd = pwd;
+    loadDeposits().then(() => showView(viewId, btn)).catch(() => {
+      adminPwd = '';
+      alert("Mot de passe incorrect ou serveur inaccessible.");
+    });
+    return;
+  }
+  showView(viewId, btn);
+}
+function showView(viewId, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(viewId).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+  btn.classList.add('active');
+}
+function adminLogout() {
+  adminPwd = ''; deposits = [];
+  updateStats();
+  showView('shop-view', document.querySelector('.nav-item'));
+}
+
+function productCard(p, admin) {
+  const id = esc(p.id);
+  const buttons = admin
+    ? `<button class="btn btn-outline" onclick="editProduct('${id}')">Modifier</button>
+       <button class="btn btn-danger" onclick="deleteProduct('${id}')">Supprimer</button>`
+    : `<button class="btn" onclick="orderProduct('${id}')">Commander / Épargner</button>`;
+  return `<div class="product-card">
+    <img src="${esc(p.img || PLACEHOLDER)}" class="product-img" alt="${esc(p.title)}" onclick="openProduct('${id}')" title="Cliquez pour agrandir">
+    <div class="product-info">
+      <div class="product-title">${esc(p.title)}</div>
+      <div class="product-price">${money(p.price)} FCFA</div>
+      <div class="product-desc">${esc(p.description || 'Aucune description détaillée.')}</div>
+      ${buttons}
+    </div></div>`;
+}
+
+function renderProducts() {
+  const grid = document.getElementById('products-grid');
+  const isLit = p => /^\s*lit/i.test(p.title) || /^lit/i.test(p.category);
+  const list = currentFilter === 'all' ? products
+    : products.filter(p => currentFilter === 'Lit' ? isLit(p) : !isLit(p));
+  grid.innerHTML = list.length ? list.map(p => productCard(p, false)).join('')
+    : '<p class="msg">Aucun article disponible pour le moment.</p>';
+}
+function renderAdminProducts() {
+  const grid = document.getElementById('admin-products-grid');
+  grid.innerHTML = products.length ? products.map(p => productCard(p, true)).join('')
+    : '<p class="msg">Aucun produit dans le catalogue.</p>';
+}
+
+function filterCategory(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderProducts();
+}
+
+const findProduct = id => products.find(p => String(p.id) === String(id));
+
+function openProduct(id) {
+  const p = findProduct(id);
+  if (!p) return;
+  document.getElementById('modal-title').innerText = p.title;
+  document.getElementById('modal-img-content').src = p.img || PLACEHOLDER;
+  document.getElementById('modal-price-content').innerText = money(p.price) + ' FCFA';
+  document.getElementById('modal-desc-content').innerText = p.description || '';
+  document.getElementById('modal-order-btn').onclick = () => { closeImageModal(); orderProduct(id); };
+  document.getElementById('image-modal').style.display = 'flex';
+}
+function closeImageModal() { document.getElementById('image-modal').style.display = 'none'; }
+
+function orderProduct(id) {
+  const p = findProduct(id);
+  if (!p) return;
+  const phone = digits(prompt("Entrez votre numéro de téléphone Mobile Money pour créer votre compte et épargner sur : " + p.title));
+  if (!phone) return;
+  if (phone.length < 8) { alert("Numéro invalide. Vérifiez et réessayez."); return; }
+  const name = (prompt("Entrez votre nom et prénom :") || '').trim();
+  if (!name) return;
+
+  post({ action: 'saveDeposit', deposit: { name: name, phone: phone, ref: 'Achat: ' + p.title } })
+    .then(() => alert("Demande enregistrée ! Consultez l'onglet « Mon compte » avec votre numéro."))
+    .catch(() => alert("Échec de l'envoi. Vérifiez votre connexion et réessayez."));
+}
+
+/* ---------- ADMIN : PRODUITS ---------- */
+function saveProduct() {
+  const product = {
+    id: document.getElementById('prod-id').value || 'PRD_' + Date.now(),
+    title: document.getElementById('prod-title').value.trim(),
+    category: document.getElementById('prod-cat').value,
+    price: document.getElementById('prod-price').value,
+    description: document.getElementById('prod-desc').value,
+    img: document.getElementById('prod-img').value.trim()
+  };
+  if (!product.title || !product.price) { alert("Veuillez remplir au moins le titre et le prix."); return; }
+
+  post({ action: 'saveProduct', product: product })
+    .then(() => { alert("Produit enregistré !"); clearProductForm(); return loadProducts(); })
+    .catch(e => alert(e.message === 'unauthorized' ? "Session expirée. Reconnectez-vous à l'admin." : "Échec de l'enregistrement."));
+}
+function editProduct(id) {
+  const p = findProduct(id);
+  if (!p) return;
+  document.getElementById('prod-id').value = p.id;
+  document.getElementById('prod-title').value = p.title;
+  document.getElementById('prod-cat').value = p.category || 'Lit';
+  document.getElementById('prod-price').value = p.price;
+  document.getElementById('prod-desc').value = p.description || '';
+  document.getElementById('prod-img').value = p.img || '';
+  document.getElementById('form-title').innerText = "Modifier le produit";
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function clearProductForm() {
+  ['prod-id','prod-title','prod-price','prod-desc','prod-img'].forEach(i => document.getElementById(i).value = '');
+  document.getElementById('prod-cat').value = 'Lit';
+  document.getElementById('form-title').innerText = "Ajouter un nouveau produit";
+}
+function deleteProduct(id) {
+  if (!confirm("Voulez-vous vraiment supprimer ce produit ?")) return;
+  post({ action: 'deleteProduct', id: id })
+    .then(() => { alert("Produit supprimé."); return loadProducts(); })
+    .catch(() => alert("Échec de la suppression."));
+}
+
+/* ---------- ADMIN : VERSEMENTS ---------- */
+function renderAdminDeposits() {
+  const list = document.getElementById('admin-deposits-list');
+  if (!deposits.length) { list.innerHTML = '<p>Aucun versement ou inscription pour le moment.</p>'; return; }
+  list.innerHTML = deposits.slice().reverse().map(d => {
+    const id = esc(d.id);
+    return `<div class="dep">
+      <strong>Client : ${esc(d.name)}</strong> (${esc(d.phone)})<br>
+      Dossier : ${esc(d.ref)} | Montant versé : <b>${money(d.amount)} FCFA</b><br>
+      Statut : <b>${esc(d.status)}</b> (${esc(d.date)})<br>
+      <input type="number" id="amt-${id}" value="${Number(d.amount) || 0}" min="0" aria-label="Montant total versé">
+      <button class="btn" onclick="updateDeposit('${id}')">Enregistrer et valider</button>
+    </div>`;
+  }).join('');
+}
+function updateDeposit(id) {
+  const amount = document.getElementById('amt-' + id).value;
+  post({ action: 'updateDepositStatus', id: id, status: 'Validé', amount: amount })
+    .then(() => { alert("Versement mis à jour !"); return loadDeposits(); })
+    .catch(() => alert("Échec de la mise à jour."));
+}
+function switchAdminTab(tab) {
+  document.getElementById('admin-products-sec').style.display = tab === 'products' ? 'block' : 'none';
+  document.getElementById('admin-deposits-sec').style.display = tab === 'products' ? 'none' : 'block';
+}
+
+/* ---------- COMPTE CLIENT ---------- */
+function checkSavings() {
+  const phone = digits(document.getElementById('client-phone').value);
+  const box = document.getElementById('client-savings-result');
+  if (!phone) { alert("Veuillez entrer votre numéro de téléphone."); return; }
+  box.innerHTML = '<div class="section-box" style="margin-top:15px">Recherche en cours...</div>';
+
+  api({ action: 'getClientDeposits', phone: phone }).then(deps => {
+    if (!Array.isArray(deps)) throw new Error('format');
+    if (!deps.length) {
+      box.innerHTML = '<div class="section-box" style="margin-top:15px;color:#c0392b">Aucun compte trouvé pour ce numéro. Commandez un article pour créer votre compte d\'épargne.</div>';
+      return;
+    }
+    let html = `<div class="section-box" style="margin-top:15px">
+      <h3>Espace client de ${esc(deps[0].name)}</h3>
+      <p style="margin-bottom:15px;color:#555">Téléphone : <strong>${esc(phone)}</strong></p>
+      <h4 style="margin-bottom:10px;color:var(--primary)">Vos articles & suivi des versements :</h4>`;
+    deps.forEach(d => {
+      const c = d.status === 'Validé' ? '#28a745' : '#e0a800';
+      html += `<div style="background:#fdf8f5;padding:12px;border-radius:5px;margin-bottom:10px;border-left:4px solid ${c}">
+        <strong>${esc(d.ref)}</strong><br>
+        Montant versé : <b>${money(d.amount)} FCFA</b><br>
+        Statut : <span style="color:${c};font-weight:bold;background:#fff;padding:2px 6px;border-radius:4px;border:1px solid ${c}">${esc(d.status)}</span><br>
+        <small style="color:#777">Date d'enregistrement : ${esc(d.date)}</small></div>`;
+    });
+    box.innerHTML = html + '</div>';
+  }).catch(() => {
+    box.innerHTML = '<div class="section-box" style="margin-top:15px;color:#c0392b">Impossible de charger votre compte. Vérifiez votre connexion et réessayez.</div>';
+  });
+}
+</script>
+</body>
+</html>
