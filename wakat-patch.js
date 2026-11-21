@@ -16,7 +16,29 @@
       .replace('Entrez votre numéro Mobile Money pour voir', 'Entrez votre code PIN pour voir');
   });
 
+  /* ---------- Bouton « Code PIN oublié ? » ---------- */
+  const goBtn = Array.from(document.querySelectorAll('#savings-view button')).find(b => (b.getAttribute('onclick') || '').indexOf('checkSavings') > -1);
+  if (goBtn) {
+    const fb = document.createElement('button');
+    fb.className = 'btn btn-outline'; fb.textContent = 'Code PIN oublié ?'; fb.onclick = () => forgotPin();
+    goBtn.insertAdjacentElement('afterend', fb);
+  }
+  window.forgotPin = function () {
+    const name = (prompt("Entrez votre nom et prénom :") || '').trim(); if (!name) return;
+    const phone = digits(prompt("Entrez le numéro avec lequel vous vous êtes inscrit :"));
+    if (phone.length < 8) { alert("Numéro invalide. Vérifiez et réessayez."); return; }
+    post({ action: 'requestPinReset', reset: { name: name, phone: phone } })
+      .then(() => alert("Demande envoyée. WakatShop vérifiera votre identité puis vous enverra un nouveau code PIN sur ce numéro (WhatsApp ou SMS)."))
+      .catch(() => alert("Échec de l'envoi. Vérifiez votre connexion et réessayez."));
+  };
+
   /* ---------- Outils ---------- */
+  let pinReqs = [];
+  function pinSection() {
+    return `<h4 style="color:var(--primary);margin-bottom:8px">Demandes de nouveau PIN (${pinReqs.length})</h4>` +
+      (pinReqs.length ? pinReqs.map(r => `<div class="dep"><strong>${esc(r.name)}</strong> (${esc(r.phone)})<br><small>Nom enregistré : ${esc(r.registeredName || '—')}</small><br><button class="btn" onclick="resetPin('${esc(digits(r.phone))}')">Générer un nouveau PIN</button></div>`).join('')
+        : '<p style="margin-bottom:15px">Aucune demande.</p>');
+  }
   function askIdentity() {
     const name = (prompt("Entrez votre nom et prénom :") || '').trim();
     if (!name) return null;
@@ -130,7 +152,7 @@
     const list = document.getElementById('admin-deposits-list');
     const byId = {}; deposits.forEach(d => byId[d.id] = d);
     const pending = payments.filter(p => p.status === 'En attente');
-    let html = `<h4 style="color:var(--primary);margin-bottom:8px">Versements à valider (${pending.length})</h4>`;
+    let html = pinSection() + `<h4 style="color:var(--primary);margin-bottom:8px">Versements à valider (${pending.length})</h4>`;
     html += pending.length ? pending.map(p => {
       const d = byId[p.depositId] || {};
       return `<div class="dep">${photo(d)}<strong>${esc(d.name)}</strong> (${esc(p.phone)})<br>${esc(d.ref)}<br>
@@ -149,16 +171,34 @@
         <button class="btn" onclick="addCash('${id}')">Ajouter</button><br>
         ${open ? `<button class="btn btn-outline" onclick="remind('${id}','wa')">🔔 Rappel WhatsApp</button> <button class="btn btn-outline" onclick="remind('${id}','sms')">🔔 Rappel SMS</button><br>` : ''}
         <button class="btn btn-danger" onclick="deleteDossier('${id}')">Supprimer ce dossier</button>
-        <button class="btn btn-danger" onclick="deleteClientAcct('${esc(digits(d.phone))}')">Supprimer le client</button></div>`;
+        <button class="btn btn-danger" onclick="deleteClientAcct('${esc(digits(d.phone))}')">Supprimer le client</button>
+        <button class="btn btn-outline" onclick="resetPin('${esc(digits(d.phone))}')">Réinitialiser le PIN</button></div>`;
     }).join('') : '<p>Aucun dossier pour le moment.</p>';
     html += `<h4 style="color:var(--primary);margin:15px 0 8px">Inscrits sans article (${registered.length})</h4>`;
     html += registered.length ? registered.slice().reverse().map(c => `<div class="dep">
         <strong>${esc(c.name)}</strong> (${esc(c.phone)}) · PIN : <b>${esc(c.pin || '—')}</b> · ${dateFmt(c.date)}<br>
-        <button class="btn btn-danger" onclick="deleteClientAcct('${esc(digits(c.phone))}')">Supprimer ce client</button></div>`).join('')
+        <button class="btn btn-danger" onclick="deleteClientAcct('${esc(digits(c.phone))}')">Supprimer ce client</button>
+        <button class="btn btn-outline" onclick="resetPin('${esc(digits(c.phone))}')">Réinitialiser le PIN</button></div>`).join('')
       : '<p>Aucune inscription pour le moment.</p>';
     list.innerHTML = html;
   };
 
+  window.resetPin = function (phone) {
+    if (!confirm("Générer un nouveau code PIN pour ce client ? L'ancien ne fonctionnera plus.")) return;
+    post({ action: 'resetPin', phone: phone }).then(r => {
+      alert("Nouveau PIN : " + r.pin);
+      if (confirm("Envoyer ce PIN au client par WhatsApp ?")) {
+        let n = phone; if (n.length > 8 && n.indexOf('226') === 0) n = n.slice(3);
+        window.open('https://wa.me/226' + n + '?text=' + encodeURIComponent("Bonjour, votre nouveau code PIN WakatShop est : " + r.pin + ". Gardez-le pour vous et ne le partagez avec personne."), '_blank');
+      }
+      return loadDeposits();
+    }).catch(() => alert("Échec de l'opération."));
+  };
+  const ld = window.loadDeposits;
+  window.loadDeposits = function () {
+    return ld().then(() => api({ action: 'getPinRequests', pwd: adminPwd })
+      .then(r => { pinReqs = Array.isArray(r) ? r : []; renderAdminDeposits(); }).catch(() => {}));
+  };
   window.deleteClientAcct = function (phone) {
     if (!confirm("Supprimer définitivement ce client (compte, dossiers et versements) ?")) return;
     post({ action: 'deleteClient', phone: phone })
